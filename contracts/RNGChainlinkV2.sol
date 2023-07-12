@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.6;
+pragma solidity 0.8.17;
 
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
@@ -25,6 +25,9 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
 
   /// @dev A list of random numbers from past requests mapped by request id
   mapping(uint32 => uint256) internal randomNumbers;
+
+  /// @dev A list of random number completion timestamps mapped by request id
+  mapping(uint32 => uint64) internal requestCompletedAt;
 
   /// @dev A list of blocks to be locked at based on past requests mapped by request id
   mapping(uint32 => uint32) internal requestLockBlock;
@@ -121,6 +124,14 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
     return randomNumbers[_internalRequestId];
   }
 
+  /**
+   * @inheritdoc RNGInterface
+   * @dev Returns zero if not completed or if the request doesn't exist
+   */
+  function completedAt(uint32 requestId) external view returns (uint64 completedAtTimestamp) {
+    return requestCompletedAt[requestId];
+  }
+
   /// @inheritdoc RNGInterface
   function getLastRequestId() external view override returns (uint32 requestId) {
     return requestCounter;
@@ -173,6 +184,7 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
 
     uint256 _randomNumber = _randomWords[0];
     randomNumbers[_internalRequestId] = _randomNumber;
+    requestCompletedAt[_internalRequestId] = uint64(block.timestamp);
 
     emit RandomNumberCompleted(_internalRequestId, _randomNumber);
   }
