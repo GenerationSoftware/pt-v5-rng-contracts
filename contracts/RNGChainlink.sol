@@ -136,6 +136,7 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
 
     // Store random value
     randomNumbers[internalRequestId] = randomness;
+    requestCompletedAt[internalRequestId] = uint64(block.timestamp);
 
     emit RandomNumberCompleted(internalRequestId, randomness);
   }

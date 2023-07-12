@@ -113,6 +113,7 @@ contract RNGBlockhash is RNGInterface, Ownable {
   function _storeResult(uint32 requestId, uint256 result) internal {
     // Store random value
     randomNumbers[requestId] = result;
+    requestCompletedAt[requestId] = uint64(block.timestamp);
 
     emit RandomNumberCompleted(requestId, result);
   }

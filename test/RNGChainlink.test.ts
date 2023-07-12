@@ -156,4 +156,50 @@ describe('RNGChainlink contract', function () {
       expect(await rng.callStatic.randomNumber(requestId)).to.equal(123);
     });
   });
+
+  describe('completedAt()', () => {
+    it('should provide the timestamp at which a request was completed at', async () => {
+      // Prep
+      await link.mock.transferFrom.withArgs(deployer.address, rng.address, fee).returns(true);
+
+      const seed = solidityPack(['bytes32', 'uint256'], [keyhash, 0]);
+      await link.mock.transferAndCall.withArgs(vrfCoordinator.address, fee, seed).returns(true);
+
+      // Test
+      const tx = await rng.requestRandomNumber();
+
+      const events = await getEvents(tx, rng);
+      const event = events.find((event) => event && event.name === 'VRFRequested');
+
+      if (event) {
+        const { requestId, chainlinkRequestId } = event.args;
+
+        const fulfillTx = await rng.connect(vrfCoordinator).rawFulfillRandomness(chainlinkRequestId, 123);
+
+        const block = await provider.getBlock(fulfillTx.blockNumber);
+        expect(await rng.callStatic.completedAt(requestId)).to.equal(block.timestamp);
+      }
+    });
+
+    it('should return zero if the request does not exist', async () => {
+      const internalRequestId = await rng.callStatic.getLastRequestId() + 1;
+      const completionTime = await rng.callStatic.completedAt(internalRequestId);
+      expect(completionTime).to.equal(0);
+    });
+
+    it('should return zero if the request is not completed', async () => {
+      // Prep
+      await link.mock.transferFrom.withArgs(deployer.address, rng.address, fee).returns(true);
+
+      const seed = solidityPack(['bytes32', 'uint256'], [keyhash, 0]);
+      await link.mock.transferAndCall.withArgs(vrfCoordinator.address, fee, seed).returns(true);
+
+      // Test
+      const tx = await rng.requestRandomNumber();
+      const internalRequestId = await rng.callStatic.getLastRequestId();
+      const completionTime = await rng.callStatic.completedAt(internalRequestId);
+      expect(await rng.callStatic.isRequestComplete(internalRequestId)).to.equal(false);
+      expect(completionTime).to.equal(0);
+    });
+  });
 });

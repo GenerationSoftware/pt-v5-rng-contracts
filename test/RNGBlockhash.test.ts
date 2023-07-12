@@ -94,4 +94,37 @@ describe('RNGBlockhash contract', function () {
         .withArgs(requestId, 123);
     });
   });
+
+  describe('completedAt()', () => {
+    it('should provide the timestamp at which a request was completed at', async () => {
+      const requestId = ethers.constants.One;
+      await rng.setRequestCount(0);
+      await rng.requestRandomNumber();
+
+      // advance 2 blocks
+      await increaseTime(1000);
+      await increaseTime(1000);
+
+      const completeTx = rng.randomNumber(requestId);
+
+      const block = await provider.getBlock(completeTx.blockNumber);
+      expect(await rng.callStatic.completedAt(requestId)).to.equal(block.timestamp);
+    });
+
+    it('should return zero if the request does not exist', async () => {
+      const requestId = ethers.constants.One;
+      await rng.setRequestCount(0);
+      const completionTime = await rng.callStatic.completedAt(requestId);
+      expect(completionTime).to.equal(0);
+    });
+
+    it('should return zero if the request is not completed', async () => {
+      const requestId = ethers.constants.One;
+      await rng.setRequestCount(0);
+      await rng.requestRandomNumber();
+      const completionTime = await rng.callStatic.completedAt(requestId);
+      expect(await rng.callStatic.isRequestComplete(requestId)).to.equal(false);
+      expect(completionTime).to.equal(0);
+    });
+  });
 });
