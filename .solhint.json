@@ -11,7 +11,7 @@
       ],
       "mark-callable-contracts": "off",
       "no-empty-blocks": "off",
-      "compiler-version": ["error", "0.8.6"],
+      "compiler-version": ["error", "0.8.17"],
       "private-vars-leading-underscore": "off",
       "code-complexity": "warn",
       "const-name-snakecase": "warn",

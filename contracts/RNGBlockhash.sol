@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.6;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -12,6 +12,9 @@ contract RNGBlockhash is RNGInterface, Ownable {
 
   /// @dev A list of random numbers from past requests mapped by request id
   mapping(uint32 => uint256) internal randomNumbers;
+
+  /// @dev A list of random number completion timestamps mapped by request id
+  mapping(uint32 => uint64) internal requestCompletedAt;
 
   /// @dev A list of blocks to be locked at based on past requests mapped by request id
   mapping(uint32 => uint32) internal requestLockBlock;
@@ -76,6 +79,14 @@ contract RNGBlockhash is RNGInterface, Ownable {
     return randomNumbers[requestId];
   }
 
+  /**
+   * @inheritdoc RNGInterface
+   * @dev Returns zero if not completed or if the request doesn't exist
+   */
+  function completedAt(uint32 requestId) external view returns (uint64 completedAtTimestamp) {
+    return requestCompletedAt[requestId];
+  }
+
   /// @dev Checks if the request for randomness from the 3rd-party service has completed
   /// @param requestId The ID of the request used to get the results of the RNG service
   /// @return True if the request has completed and a random number is available, false otherwise
@@ -102,6 +113,7 @@ contract RNGBlockhash is RNGInterface, Ownable {
   function _storeResult(uint32 requestId, uint256 result) internal {
     // Store random value
     randomNumbers[requestId] = result;
+    requestCompletedAt[requestId] = uint64(block.timestamp);
 
     emit RandomNumberCompleted(requestId, result);
   }

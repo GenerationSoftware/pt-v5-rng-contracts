@@ -204,6 +204,45 @@ describe('RNGChainlinkV2 contract', function () {
     });
   });
 
+  describe('completedAt()', () => {
+    it('should provide the timestamp at which a request was completed at', async () => {
+      await rng.subscribe();
+
+      const returnData = await rng.connect(manager).callStatic.requestRandomNumber();
+      const requestRandomNumberTransaction = await rng.connect(manager).requestRandomNumber();
+
+      const events = await getEvents(requestRandomNumberTransaction, vrfCoordinator);
+      const event = events.find((event) => event && event.name === 'RandomWordsRequested');
+
+      if (event) {
+        const requestId = event.args['requestId'];
+        const internalRequestId = returnData['requestId'];
+
+        const randomNumber = Math.floor(Math.random() * 1000);
+        const fulfillRngTransaction = await rng.rawFulfillRandomWordsStub(requestId, [randomNumber]);
+
+        const block = await provider.getBlock(fulfillRngTransaction.blockNumber);
+        expect(await rng.callStatic.completedAt(internalRequestId)).to.equal(block.timestamp);
+      }
+    });
+
+    it('should return zero if the request does not exist', async () => {
+      await rng.subscribe();
+      const internalRequestId = await rng.callStatic.getLastRequestId() + 1;
+      const completionTime = await rng.callStatic.completedAt(internalRequestId);
+      expect(completionTime).to.equal(0);
+    });
+
+    it('should return zero if the request is not completed', async () => {
+      await rng.subscribe();
+      await rng.connect(manager).requestRandomNumber();
+      const internalRequestId = await rng.callStatic.getLastRequestId();
+      const completionTime = await rng.callStatic.completedAt(internalRequestId);
+      expect(await rng.callStatic.isRequestComplete(internalRequestId)).to.equal(false);
+      expect(completionTime).to.equal(0);
+    });
+  });
+
   describe('fulfillRandomWords()', () => {
     it('should fulfill a random number request', async () => {
       await rng.subscribe();

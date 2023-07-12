@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.6;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
@@ -24,6 +24,9 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
 
   /// @dev A list of random numbers from past requests mapped by request id
   mapping(uint32 => uint256) internal randomNumbers;
+
+  /// @dev A list of random number completion timestamps mapped by request id
+  mapping(uint32 => uint64) internal requestCompletedAt;
 
   /// @dev A list of blocks to be locked at based on past requests mapped by request id
   mapping(uint32 => uint32) internal requestLockBlock;
@@ -104,6 +107,14 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
     return randomNumbers[requestId];
   }
 
+  /**
+   * @inheritdoc RNGInterface
+   * @dev Returns zero if not completed or if the request doesn't exist
+   */
+  function completedAt(uint32 requestId) external view returns (uint64 completedAtTimestamp) {
+    return requestCompletedAt[requestId];
+  }
+
   /// @dev Requests a new random number from the Chainlink VRF
   /// @dev The result of the request is returned in the function `fulfillRandomness`
   function _requestRandomness() internal returns (uint32 requestId) {
@@ -125,6 +136,7 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
 
     // Store random value
     randomNumbers[internalRequestId] = randomness;
+    requestCompletedAt[internalRequestId] = uint64(block.timestamp);
 
     emit RandomNumberCompleted(internalRequestId, randomness);
   }
