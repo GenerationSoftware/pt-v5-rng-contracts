@@ -64,5 +64,5 @@ interface RNGInterface {
    * @param requestId The ID of the request used to get the results of the RNG service
    * @return completedAtTimestamp The timestamp at which the request was completed
    */
-  function completedAt(uint32 requestId) external returns (uint64 completedAtTimestamp);
+  function completedAt(uint32 requestId) external view returns (uint64 completedAtTimestamp);
 }
