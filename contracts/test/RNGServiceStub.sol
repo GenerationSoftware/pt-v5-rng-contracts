@@ -30,7 +30,7 @@ contract RNGServiceStub is RNGInterface {
     completedAtTimestamp = uint64(block.timestamp);
   }
 
-  function requestRandomNumber() external pure override returns (uint32, uint32) {
+  function requestRandomNumber() external payable override returns (uint32, uint32) {
     return (1, 1);
   }
 

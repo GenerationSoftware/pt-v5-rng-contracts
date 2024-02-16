@@ -78,7 +78,7 @@ contract RNGChainlink is RNGInterface, VRFConsumerBase, Ownable {
   /// @return requestId The ID of the request used to get the results of the RNG service
   /// @return lockBlock The block number at which the RNG service will start generating time-delayed randomness.  The calling contract
   /// should "lock" all activity until the result is available via the `requestId`
-  function requestRandomNumber() external override returns (uint32 requestId, uint32 lockBlock) {
+  function requestRandomNumber() external payable override returns (uint32 requestId, uint32 lockBlock) {
     lockBlock = uint32(block.number);
 
     // collect fee for payment

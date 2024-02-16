@@ -42,7 +42,7 @@ interface RNGInterface {
    * @return lockBlock The block number at which the RNG service will start generating time-delayed randomness.
    * The calling contract should "lock" all activity until the result is available via the `requestId`
    */
-  function requestRandomNumber() external returns (uint32 requestId, uint32 lockBlock);
+  function requestRandomNumber() external payable returns (uint32 requestId, uint32 lockBlock);
 
   /**
    * @notice Checks if the request for randomness from the 3rd-party service has completed

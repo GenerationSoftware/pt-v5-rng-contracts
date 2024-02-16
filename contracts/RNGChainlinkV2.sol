@@ -80,6 +80,7 @@ contract RNGChainlinkV2 is RNGChainlinkV2Interface, VRFConsumerBaseV2, Manageabl
   /// @inheritdoc RNGInterface
   function requestRandomNumber()
     external
+    payable
     override
     onlyManager
     returns (uint32 requestId, uint32 lockBlock)

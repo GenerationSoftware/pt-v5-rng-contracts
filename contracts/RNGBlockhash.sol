@@ -40,6 +40,7 @@ contract RNGBlockhash is RNGInterface, Ownable {
   /// should "lock" all activity until the result is available via the `requestId`
   function requestRandomNumber()
     external
+    payable
     virtual
     override
     returns (uint32 requestId, uint32 lockBlock)
